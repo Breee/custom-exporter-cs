@@ -78,12 +78,16 @@ namespace custom_exporter {
                            // Iterate over Metric Structs and gather data.
                            List<MetricStruct<Gauge>> gaugeStructs = mPrometheusMetricManager.GetGauges();
                            foreach (MetricStruct<Gauge> metricStruct in gaugeStructs) {
-                               Task<object> endpoint_task = metricStruct.getMetricProvider().GetValue();
-                               endpoint_task.Wait();
-                               Console.WriteLine("{0} result: {1}", metricStruct.getMetricProvider().GetMetricName(), endpoint_task.Result.ToString());
-                               object result = endpoint_task.Result;
+
+                               MetricProvider metricProvider = metricStruct.getMetricProvider();
+                               Task<object> endpoint_task = metricProvider.GetValue();
+                               SortedDictionary<string, string> labels = metricProvider.GetLabels();
                                Gauge gauge = metricStruct.getPrometheusMetric();
-                               SortedDictionary<string, string> labels = metricStruct.getMetricProvider().GetLabels();
+
+                               endpoint_task.Wait();
+                               Console.WriteLine("{0} result: {1}", metricProvider.GetMetricName(), endpoint_task.Result.ToString());
+                               object result = endpoint_task.Result;
+
                                if (labels != null) {
                                    gauge.WithLabels(labels.Values.ToArray()).Set((double)endpoint_task.Result);
                                } else {
