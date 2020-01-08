@@ -65,7 +65,7 @@ namespace custom_exporter {
                        CreateMetricEndpoints(o.metricDefinitionFile);
                    });
             // Start Metric server which serves metric endpoint at specified port
-            var server = new MetricServer(hostname: "localhost", port: 8888);
+            var server = new MetricServer(8888);
             server.Start();
 
             while (true) {
