@@ -2,7 +2,6 @@
   {
     "service_name": "grafana",
     "url": "http://grafana",
-    "request_headers": [],
     "metrics": [
       {
         "metric_name": "database_health",
@@ -17,6 +16,16 @@
         "metric_name": "custom_output",
         "program": "python",
         "argument": "custom_script.py"
+      },
+      {
+        "metric_name": "custom_bash_command",
+        "program": "/bin/bash",
+        "argument": "-c \"echo 1\""
+      },
+      {
+        "metric_name": "custom_script2",
+        "program": "/bin/bash",
+        "argument": "test.sh"
       }
     ]
   }

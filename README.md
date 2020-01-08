@@ -1,7 +1,9 @@
 # custom-exporter-cs
 
-This is a Custom prometheus exporter, which extracts custom metrics, 
-custom metrics are configured in json format. Currently we support API calls and execution of scripts, with the limitation that only double values are accepted.
+This is a Custom prometheus exporter, which extracts custom metrics.
+Custom metrics are configured in json format. 
+Currently we support API calls and execution of scripts.
+Currently only Prometheus Gauge measurements are supported. Summary, Histogram and Counter not.
 
 ## requirements
 - .NET core 3.1
@@ -13,7 +15,6 @@ A metric definition is a json file of the form:
   {
     "service_name": "grafana",
     "url": "http://grafana",
-    "request_headers": [],
     "metrics": [
       {
         "metric_name": "database_health",
@@ -43,8 +44,8 @@ A metric definition is a json file of the form:
   }
 ]
 ```
-We define a json array which contains different definitions: 
-
+It contains a set of json objects, which define metrics for each service.
+We define a service as follows: 
 ```json
 {
     "service_name": "grafana",
@@ -138,3 +139,4 @@ You can use the following docker-compose definition:
     volumes:
       - ./custom-exporter-cs/metric_definition.json:/app/metric_definition.json
 ```
+If you need specific tools, you have to alter the `Dockerfile`
