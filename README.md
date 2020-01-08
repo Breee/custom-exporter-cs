@@ -28,6 +28,16 @@ A metric definition is a json file of the form:
         "metric_name": "custom_output",
         "program": "python",
         "argument": "custom_script.py"
+      },
+      {
+      "metric_name": "custom_bash_command",
+      "program": "/bin/bash",
+      "argument": "-c \"echo 1\""
+      },
+      {
+      "metric_name": "custom_script2",
+      "program": "/bin/bash",
+      "argument": "test.sh"
       }
     ]
   }
