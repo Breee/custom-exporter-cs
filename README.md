@@ -107,12 +107,22 @@ a metric can be an API call:
     - `string_value_mapping` is a mapping of strings to doubles, 
       this is useful if a `desired_response_field` contains a string like the example above, `"ok"`.
 
-    Another example for a metric is the execution of a script:
+    Another example for a metric is the execution of a python or bash script/command:
     ```json
-     {
+      {
         "metric_name": "custom_output",
         "program": "python",
         "argument": "custom_script.py"
+      },
+      {
+      "metric_name": "custom_bash_command",
+      "program": "/bin/bash",
+      "argument": "-c \"echo 1\""
+      },
+      {
+      "metric_name": "custom_script2",
+      "program": "/bin/bash",
+      "argument": "test.sh"
       }
     ```
     - `program` is the main application we execute
