@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Reflection.Emit;
+using System.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -37,10 +39,20 @@ namespace custom_exporter {
                     string reponse_body_identifier = metric.DesiredResponseField;
                     AuthCredentials auth_credentials = def.AuthCredentials;
                     Dictionary<string, double> string_value_mapping = metric.StringValueMapping;
-                    // Create MetricEndpoint which executes API calls
-                    MetricProvider metricEndpoint = new MetricProvider(api_endpoint, metric_name, reponse_body_identifier, auth_credentials, string_value_mapping, metric.Program, metric.Argument);
+                    SortedDictionary<string, string> labels = metric.Labels;
+                    // Create MetricEndpoint which executes API calls or executes a program/script
+                    MetricProvider metricEndpoint = null;
+                    if (metric.ExecutionType == "script" && metric.Program != null && metric.Argument != null) {
+                        metricEndpoint = new MetricProvider(metric_name, metric.Program, metric.Argument, labels);
+                    } else if (metric.ExecutionType == "api_call" && api_endpoint != null) {
+                        metricEndpoint = new MetricProvider(api_endpoint, metric_name, reponse_body_identifier, auth_credentials, string_value_mapping, labels);
+                    }
                     // Create Prometheus Gauges
-                    Gauge metricGauge = Metrics.CreateGauge(name: metric_name, help: metric_name);
+                    GaugeConfiguration config = new GaugeConfiguration();
+                    if (labels != null) {
+                        config.LabelNames = labels.Keys.ToArray();
+                    }
+                    Gauge metricGauge = Metrics.CreateGauge(name: metric_name, help: metric_name, config);
                     mPrometheusMetricManager.AddMetricStruct(metricEndpoint, metricGauge);
                 }
             }
@@ -70,7 +82,13 @@ namespace custom_exporter {
                                endpoint_task.Wait();
                                Console.WriteLine("{0} result: {1}", metricStruct.getMetricProvider().GetMetricName(), endpoint_task.Result.ToString());
                                object result = endpoint_task.Result;
-                               metricStruct.getPrometheusMetric().Set((double)endpoint_task.Result);
+                               Gauge gauge = metricStruct.getPrometheusMetric();
+                               SortedDictionary<string, string> labels = metricStruct.getMetricProvider().GetLabels();
+                               if (labels != null) {
+                                   gauge.WithLabels(labels.Values.ToArray()).Set((double)endpoint_task.Result);
+                               } else {
+                                   gauge.Set((double)endpoint_task.Result);
+                               }
                            }
                            Thread.Sleep(TimeSpan.FromSeconds(1));
                        }
