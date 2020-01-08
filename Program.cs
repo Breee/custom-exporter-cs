@@ -7,27 +7,10 @@ using System.Net;
 using MetricDefinitions;
 using Prometheus;
 using CommandLine;
+using PrometheusMetricManagement;
 
 
 namespace custom_exporter {
-    public struct GaugeMetricStruct {
-        private MetricProvider mMetricProvider;
-        private Gauge mGauge;
-
-        public GaugeMetricStruct(MetricProvider metricProvider, Gauge gauge) {
-            mMetricProvider = metricProvider;
-            mGauge = gauge;
-        }
-
-        public MetricProvider getMetricProvider() {
-            return mMetricProvider;
-        }
-
-        public Gauge getGauge() {
-            return mGauge;
-        }
-    }
-
     class Program {
 
         public class Options {
@@ -38,7 +21,7 @@ namespace custom_exporter {
             public int metricServerPort { get; set; }
         }
 
-        static private List<GaugeMetricStruct> mMetricStructs = new List<GaugeMetricStruct>();
+        static private PrometheusMetricManager mPrometheusMetricManager = new PrometheusMetricManager();
 
         static void CreateMetricProviders(string metricDefinitionFile) {
             // Read metric definition and create array of MetricDefinition objects.
@@ -49,7 +32,6 @@ namespace custom_exporter {
                 string service_name = def.ServiceName;
                 string url = def.Url;
                 foreach (Metric metric in def.Metrics) {
-
                     string api_endpoint = metric.ApiEndpoint != null ? url + metric.ApiEndpoint : null;
                     string metric_name = def.ServiceName + "_" + metric.MetricName;
                     string reponse_body_identifier = metric.DesiredResponseField;
@@ -57,9 +39,9 @@ namespace custom_exporter {
                     Dictionary<string, double> string_value_mapping = metric.StringValueMapping;
                     // Create MetricEndpoint which executes API calls
                     MetricProvider metricEndpoint = new MetricProvider(api_endpoint, metric_name, reponse_body_identifier, auth_credentials, string_value_mapping, metric.Program, metric.Argument);
-                    // Create Prometheus Gauge
+                    // Create Prometheus Gauges
                     Gauge metricGauge = Metrics.CreateGauge(name: metric_name, help: metric_name);
-                    mMetricStructs.Add(new GaugeMetricStruct(metricEndpoint, metricGauge));
+                    mPrometheusMetricManager.AddMetricStruct(metricEndpoint, metricGauge);
                 }
             }
         }
@@ -82,14 +64,14 @@ namespace custom_exporter {
                        CreateMetricProviders(o.metricDefinitionFile);
                        while (true) {
                            // Iterate over Metric Structs and gather data.
-                           foreach (GaugeMetricStruct metricStruct in mMetricStructs) {
+                           List<MetricStruct<Gauge>> gaugeStructs = mPrometheusMetricManager.GetGauges();
+                           foreach (MetricStruct<Gauge> metricStruct in gaugeStructs) {
                                Task<object> endpoint_task = metricStruct.getMetricProvider().GetValue();
                                endpoint_task.Wait();
                                Console.WriteLine("{0} result: {1}", metricStruct.getMetricProvider().GetMetricName(), endpoint_task.Result.ToString());
                                object result = endpoint_task.Result;
-                               metricStruct.getGauge().Set((double)endpoint_task.Result);
+                               metricStruct.getPrometheusMetric().Set((double)endpoint_task.Result);
                            }
-
                            Thread.Sleep(TimeSpan.FromSeconds(1));
                        }
                    });
