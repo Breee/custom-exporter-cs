@@ -40,7 +40,7 @@ namespace custom_exporter {
 
         static private List<GaugeMetricStruct> mMetricStructs = new List<GaugeMetricStruct>();
 
-        static void CreateMetricEndpoints(string metricDefinitionFile) {
+        static void CreateMetricProviders(string metricDefinitionFile) {
             // Read metric definition and create array of MetricDefinition objects.
             string definition = File.ReadAllText(metricDefinitionFile);
             MetricDefinition[] metricDefinitions = MetricDefinition.FromJson(definition);
@@ -66,11 +66,11 @@ namespace custom_exporter {
         static void Main(string[] args) {
             Parser.Default.ParseArguments<Options>(args)
                    .WithParsed<Options>(o => {
-                       CreateMetricEndpoints(o.metricDefinitionFile);
-
                        MetricServer server = null;
                        // Start Metric server which serves metric endpoint at specified port
                        try {
+                           // We need this for Docker, else the metricserver is not reachable on the exposed port.
+                           // I assume this way it serves on 0.0.0.0:PORT and thus listens on all interfaces.
                            server = new MetricServer(o.metricServerPort);
                            server.Start();
                        } catch (HttpListenerException e) {
@@ -78,7 +78,8 @@ namespace custom_exporter {
                            server.Start();
                        }
 
-
+                       // Create Metric Providers from the given metric_definition and store them. 
+                       CreateMetricProviders(o.metricDefinitionFile);
                        while (true) {
                            // Iterate over Metric Structs and gather data.
                            foreach (GaugeMetricStruct metricStruct in mMetricStructs) {
