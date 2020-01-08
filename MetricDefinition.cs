@@ -6,16 +6,14 @@
 //
 //    var metricDefinition = MetricDefinition.FromJson(jsonString);
 
-namespace MetricDefinitions
-{
+namespace MetricDefinitions {
     using System.Collections.Generic;
     using System.Globalization;
     using System;
     using Newtonsoft.Json.Converters;
     using Newtonsoft.Json;
 
-    public partial class MetricDefinition
-    {
+    public partial class MetricDefinition {
         [JsonProperty("service_name", NullValueHandling = NullValueHandling.Ignore)]
         public string ServiceName { get; set; }
 
@@ -32,8 +30,7 @@ namespace MetricDefinitions
         public Metric[] Metrics { get; set; }
     }
 
-    public partial class AuthCredentials
-    {
+    public partial class AuthCredentials {
         [JsonProperty("token", NullValueHandling = NullValueHandling.Ignore)]
         public string Token { get; set; }
 
@@ -44,8 +41,7 @@ namespace MetricDefinitions
         public string Password { get; set; }
     }
 
-    public partial class Metric
-    {
+    public partial class Metric {
         [JsonProperty("metric_name", NullValueHandling = NullValueHandling.Ignore)]
         public string MetricName { get; set; }
 
@@ -61,24 +57,26 @@ namespace MetricDefinitions
         [JsonProperty("program", NullValueHandling = NullValueHandling.Ignore)]
         public string Program { get; set; }
 
-        [JsonProperty("Argument", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("argument", NullValueHandling = NullValueHandling.Ignore)]
         public string Argument { get; set; }
+
+        [JsonProperty("execution_type", NullValueHandling = NullValueHandling.Ignore)]
+        public string ExecutionType { get; set; }
+
+        [JsonProperty("labels", NullValueHandling = NullValueHandling.Ignore)]
+        public SortedDictionary<string, string> Labels { get; set; }
     }
 
-    public partial class MetricDefinition
-    {
+    public partial class MetricDefinition {
         public static MetricDefinition[] FromJson(string json) => JsonConvert.DeserializeObject<MetricDefinition[]>(json, MetricDefinitions.Converter.Settings);
     }
 
-    public static class Serialize
-    {
+    public static class Serialize {
         public static string ToJson(this MetricDefinition[] self) => JsonConvert.SerializeObject(self, MetricDefinitions.Converter.Settings);
     }
 
-    internal static class Converter
-    {
-        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
-        {
+    internal static class Converter {
+        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,
             Converters = {
