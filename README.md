@@ -151,3 +151,5 @@ dotnet ./out/custom_exporter.dll
 ```
 
 A HTTP server will be started, and the metrics exposed at `localhost:8888/metrics`
+
+Custom metrics are named like this: `<service_name>_<metric_name>`, e.g. the `database_health` metric we defined in the `grafana`service, is exported as `grafana_database_health`.
