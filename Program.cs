@@ -33,6 +33,9 @@ namespace custom_exporter {
         public class Options {
             [Option('m', "metric-definition", Required = false, HelpText = "file which contains a metric-definition", Default = "metric_definition.json")]
             public string metricDefinitionFile { get; set; }
+
+            [Option('p', "port", Required = false, HelpText = "Port on which we run the server", Default = 8888)]
+            public int metricServerPort { get; set; }
         }
 
         static private List<GaugeMetricStruct> mMetricStructs = new List<GaugeMetricStruct>();
@@ -64,29 +67,31 @@ namespace custom_exporter {
             Parser.Default.ParseArguments<Options>(args)
                    .WithParsed<Options>(o => {
                        CreateMetricEndpoints(o.metricDefinitionFile);
+
+                       MetricServer server = null;
+                       // Start Metric server which serves metric endpoint at specified port
+                       try {
+                           server = new MetricServer(o.metricServerPort);
+                           server.Start();
+                       } catch (HttpListenerException e) {
+                           server = new MetricServer("localhost", o.metricServerPort);
+                           server.Start();
+                       }
+
+
+                       while (true) {
+                           // Iterate over Metric Structs and gather data.
+                           foreach (GaugeMetricStruct metricStruct in mMetricStructs) {
+                               Task<object> endpoint_task = metricStruct.getMetricProvider().GetValue();
+                               endpoint_task.Wait();
+                               Console.WriteLine("{0} result: {1}", metricStruct.getMetricProvider().GetMetricName(), endpoint_task.Result.ToString());
+                               object result = endpoint_task.Result;
+                               metricStruct.getGauge().Set((double)endpoint_task.Result);
+                           }
+
+                           Thread.Sleep(TimeSpan.FromSeconds(1));
+                       }
                    });
-            MetricServer server = null;
-            // Start Metric server which serves metric endpoint at specified port
-            try {
-                server = new MetricServer(8888);
-                server.Start();
-            } catch (HttpListenerException e) {
-                server = new MetricServer("localhost", 8888);
-                server.Start();
-            }
-
-            while (true) {
-                // Iterate over Metric Structs and gather data.
-                foreach (GaugeMetricStruct metricStruct in mMetricStructs) {
-                    Task<object> endpoint_task = metricStruct.getMetricProvider().GetValue();
-                    endpoint_task.Wait();
-                    Console.WriteLine("{0} result: {1}", metricStruct.getMetricProvider().GetMetricName(), endpoint_task.Result.ToString());
-                    object result = endpoint_task.Result;
-                    metricStruct.getGauge().Set((double)endpoint_task.Result);
-                }
-
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            }
         }
     }
 }
