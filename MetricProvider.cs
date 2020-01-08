@@ -73,6 +73,7 @@ public class MetricProvider {
             desired_value = Convert.ToDouble(RunCmd(mProgram, mArgument));
         }
 
+        // int double and float are untouched,  strings are converted according to the given value_mapping if present.
         if (desired_value is int || desired_value is double || desired_value is float) {
             return desired_value;
         } else if (desired_value is string) {

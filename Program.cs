@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using MetricDefinitions;
 using Prometheus;
+using CommandLine;
+
 
 namespace custom_exporter {
     public struct GaugeMetricStruct {
@@ -27,11 +29,16 @@ namespace custom_exporter {
 
     class Program {
 
+        public class Options {
+            [Option('m', "metric-definition", Required = false, HelpText = "file which contains a metric-definition", Default = "metric_definition.json")]
+            public string metricDefinitionFile { get; set; }
+        }
+
         static private List<GaugeMetricStruct> mMetricStructs = new List<GaugeMetricStruct>();
 
-        static void CreateMetricEndpoints() {
+        static void CreateMetricEndpoints(string metricDefinitionFile) {
             // Read metric definition and create array of MetricDefinition objects.
-            string definition = File.ReadAllText("metric_definition.json");
+            string definition = File.ReadAllText(metricDefinitionFile);
             MetricDefinition[] metricDefinitions = MetricDefinition.FromJson(definition);
 
             foreach (MetricDefinition def in metricDefinitions) {
@@ -52,8 +59,11 @@ namespace custom_exporter {
                 }
             }
         }
-        static void Main() {
-            CreateMetricEndpoints();
+        static void Main(string[] args) {
+            Parser.Default.ParseArguments<Options>(args)
+                   .WithParsed<Options>(o => {
+                       CreateMetricEndpoints(o.metricDefinitionFile);
+                   });
             // Start Metric server which serves metric endpoint at specified port
             var server = new MetricServer(hostname: "localhost", port: 1234);
             server.Start();
