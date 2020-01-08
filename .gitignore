@@ -351,3 +351,5 @@ MigrationBackup/
 netcoreapp3.1
 
 metric_definition.json
+
+out/
