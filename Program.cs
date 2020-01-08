@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
 using MetricDefinitions;
 using Prometheus;
 using CommandLine;
@@ -64,9 +65,15 @@ namespace custom_exporter {
                    .WithParsed<Options>(o => {
                        CreateMetricEndpoints(o.metricDefinitionFile);
                    });
+            MetricServer server = null;
             // Start Metric server which serves metric endpoint at specified port
-            var server = new MetricServer(8888);
-            server.Start();
+            try {
+                server = new MetricServer(8888);
+                server.Start();
+            } catch (HttpListenerException e) {
+                server = new MetricServer("localhost", 8888);
+                server.Start();
+            }
 
             while (true) {
                 // Iterate over Metric Structs and gather data.
