@@ -140,3 +140,14 @@ You can use the following docker-compose definition:
       - ./custom-exporter-cs/metric_definition.json:/app/metric_definition.json
 ```
 If you need specific tools, you have to alter the `Dockerfile`
+
+## Publishing and execution of the application:
+```
+dotnet publish -c .\custom_exporter.csproj -o out
+```
+Execute the app: 
+```
+dotnet ./out/custom_exporter.dll
+```
+
+A HTTP server will be started, and the metrics exposed at `localhost:8888/metrics`
