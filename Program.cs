@@ -6,47 +6,38 @@ using System.Threading.Tasks;
 using MetricDefinitions;
 using Prometheus;
 
-namespace custom_exporter
-{
-    public struct GaugeMetricStruct
-    {
-        private MetricProvider mMetricEndpoint;
+namespace custom_exporter {
+    public struct GaugeMetricStruct {
+        private MetricProvider mMetricProvider;
         private Gauge mGauge;
 
-        public GaugeMetricStruct(MetricProvider metricEndpoint, Gauge gauge)
-        {
-            mMetricEndpoint = metricEndpoint;
+        public GaugeMetricStruct(MetricProvider metricProvider, Gauge gauge) {
+            mMetricProvider = metricProvider;
             mGauge = gauge;
         }
 
-        public MetricProvider getMetricEndpoint()
-        {
-            return mMetricEndpoint;
+        public MetricProvider getMetricProvider() {
+            return mMetricProvider;
         }
 
-        public Gauge getGauge()
-        {
+        public Gauge getGauge() {
             return mGauge;
         }
     }
 
-    class Program
-    {
+    class Program {
 
         static private List<GaugeMetricStruct> mMetricStructs = new List<GaugeMetricStruct>();
 
-        static void CreateMetricEndpoints()
-        {
+        static void CreateMetricEndpoints() {
             // Read metric definition and create array of MetricDefinition objects.
             string definition = File.ReadAllText("metric_definition.json");
             MetricDefinition[] metricDefinitions = MetricDefinition.FromJson(definition);
 
-            foreach (MetricDefinition def in metricDefinitions)
-            {
+            foreach (MetricDefinition def in metricDefinitions) {
                 string service_name = def.ServiceName;
                 string url = def.Url;
-                foreach (Metric metric in def.Metrics)
-                {
+                foreach (Metric metric in def.Metrics) {
 
                     string api_endpoint = metric.ApiEndpoint != null ? url + metric.ApiEndpoint : null;
                     string metric_name = def.ServiceName + "_" + metric.MetricName;
@@ -61,21 +52,19 @@ namespace custom_exporter
                 }
             }
         }
-        static void Main()
-        {
+        static void Main() {
             CreateMetricEndpoints();
             // Start Metric server which serves metric endpoint at specified port
             var server = new MetricServer(hostname: "localhost", port: 1234);
             server.Start();
 
-            while (true)
-            {
+            while (true) {
                 // Iterate over Metric Structs and gather data.
-                foreach (GaugeMetricStruct metricStruct in mMetricStructs)
-                {
-                    Task<object> endpoint_task = metricStruct.getMetricEndpoint().get_value();
+                foreach (GaugeMetricStruct metricStruct in mMetricStructs) {
+                    Task<object> endpoint_task = metricStruct.getMetricProvider().GetValue();
                     endpoint_task.Wait();
-                    Console.WriteLine("enpoint_task result: {0}", endpoint_task.Result.ToString());
+                    Console.WriteLine("{0} result: {1}", metricStruct.getMetricProvider().GetMetricName(), endpoint_task.Result.ToString());
+                    object result = endpoint_task.Result;
                     metricStruct.getGauge().Set((double)endpoint_task.Result);
                 }
 
