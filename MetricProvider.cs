@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +11,7 @@ using System.Text;
 using MetricDefinitions;
 
 public class MetricProvider {
-
+    enum MetricProviderType { APICaller, Executor };
     private string mApiEndpoint;
     private string mMetricName;
     private string mResponsebodyIdentifier;
@@ -19,15 +20,15 @@ public class MetricProvider {
     private string mProgram;
     private string mArgument;
     private HttpClient mClient;
+    private SortedDictionary<string, string> mLabels;
 
-    public MetricProvider(string api_endpoint, string metric_name, string reponse_body_identifier, AuthCredentials auth_credentials, Dictionary<string, double> value_mapping, string program, string argument) {
+    public MetricProvider(string api_endpoint, string metric_name, string reponse_body_identifier, AuthCredentials auth_credentials, Dictionary<string, double> value_mapping, SortedDictionary<string, string> labels) {
         mApiEndpoint = api_endpoint;
         mMetricName = metric_name;
         mResponsebodyIdentifier = reponse_body_identifier;
         mAuthCredentials = auth_credentials;
         mValueMapping = value_mapping;
-        mProgram = program;
-        mArgument = argument;
+        mLabels = labels;
         mClient = new HttpClient();
         if (mAuthCredentials != null) {
             if (mAuthCredentials.Token != null) {
@@ -39,6 +40,12 @@ public class MetricProvider {
                 }
             }
         }
+    }
+    public MetricProvider(string metric_name, string program, string argument, SortedDictionary<string, string> labels) {
+        mMetricName = metric_name;
+        mProgram = program;
+        mArgument = argument;
+        mLabels = labels;
     }
 
     private string RunCmd(string program, string argument) {
@@ -62,6 +69,9 @@ public class MetricProvider {
         return mMetricName;
     }
 
+    public SortedDictionary<string, string> GetLabels() {
+        return mLabels;
+    }
     public async Task<object> GetValue() {
         object desired_value = null;
         // Call API endpoint or execute program/script
