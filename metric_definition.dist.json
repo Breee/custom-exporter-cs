@@ -5,25 +5,33 @@
     "metrics": [
       {
         "metric_name": "database_health",
+        "execution_type": "api_call",
         "api_endpoint": "/api/health",
         "desired_response_field": "database",
         "string_value_mapping": {
           "ok": 1.0,
           "not ok": 0.0
+        },
+        "labels": {
+          "instance": "grafana",
+          "custom_label": "some_label"
         }
       },
       {
         "metric_name": "custom_output",
+        "execution_type": "script",
         "program": "python",
         "argument": "custom_script.py"
       },
       {
         "metric_name": "custom_bash_command",
+        "execution_type": "script",
         "program": "/bin/bash",
         "argument": "-c \"echo 1\""
       },
       {
         "metric_name": "custom_script2",
+        "execution_type": "script",
         "program": "/bin/bash",
         "argument": "test.sh"
       }

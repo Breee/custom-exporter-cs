@@ -18,25 +18,33 @@ A metric definition is a json file of the form:
     "metrics": [
       {
         "metric_name": "database_health",
+        "execution_type": "api_call",
         "api_endpoint": "/api/health",
         "desired_response_field": "database",
         "string_value_mapping": {
           "ok": 1.0,
           "not ok": 0.0
+        },
+        "labels": {
+          "instance": "grafana",
+          "custom_label": "some_label"
         }
       },
       {
         "metric_name": "custom_output",
+        "execution_type": "script",
         "program": "python",
         "argument": "custom_script.py"
       },
       {
         "metric_name": "custom_bash_command",
+        "execution_type": "script",
         "program": "/bin/bash",
         "argument": "-c \"echo 1\""
       },
       {
         "metric_name": "custom_script2",
+        "execution_type": "script",
         "program": "/bin/bash",
         "argument": "test.sh"
       }
@@ -82,15 +90,21 @@ A `metric` can be an API call:
 ```json
     {
             "metric_name": "database_health",
+            "execution_type": "api_call",
             "api_endpoint": "/api/health",
             "desired_response_field": "database",
             "string_value_mapping": {
               "ok": 1.0,
               "not ok": 0.0
+            },
+            "labels": {
+              "instance": "grafana",
+              "custom_label": "some_label"
             }
     }
 ```
 - `metric_name` is the name of the metric
+- `execution_type` specifies how the metric is scraped, you can use either `api_call` or `script`
 - `api_endpoint` is the API endpoint on which we perfom a GET request,
       the whole adress consists of `url` and `api_endpoint` combined, e.g: `http://grafana/api/health`
 - `desired_response_field` is the field in the response body we want to extract, for example, the response could be:
@@ -105,20 +119,31 @@ A `metric` can be an API call:
 - `string_value_mapping` is a mapping of strings to doubles, 
       this is useful if a `desired_response_field` contains a string like the example above, `"ok"`.
 
+- `labels` is a mapping of strings to strings, where keys are label_names and values are label_values:
+    ```json
+    "labels": {
+                  "instance": "grafana",
+                  "custom_label": "some_label"
+              }
+    ```
+
 Another example for a metric is the execution of a python or bash script/command:
 ```json
 {
   "metric_name": "custom_output",
+  "execution_type": "script",
   "program": "python",
   "argument": "custom_script.py"
 },
 {
   "metric_name": "custom_bash_command",
+  "execution_type": "script",
   "program": "/bin/bash",
   "argument": "-c \"echo 1\""
 },
 {
   "metric_name": "custom_script2",
+  "execution_type": "script",
   "program": "/bin/bash",
   "argument": "test.sh"
 }
