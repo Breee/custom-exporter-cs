@@ -87,14 +87,20 @@ public class MetricProvider {
         }
     }
 
-    private object HandleApiResponse(string response) {
+    private object PreprocessResult(string response, ResponseType responseType) {
         object result = null;
-        if (mResponseType == ResponseType.JSON) {
+        if (response != null) {
+            if (responseType == ResponseType.JSON) {
+                result = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                Dictionary<string, object> flatten_json = new Dictionary<string, object>();
+                FlattenDict("", (Dictionary<string, object>)result, flatten_json);
+                result = flatten_json;
+            } else if (responseType == ResponseType.NUMBER) {
+                result = Convert.ToDouble(response);
 
-        } else if (mResponseType == ResponseType.NUMBER) {
+            } else if (responseType == ResponseType.STRING) {
 
-        } else if (mResponseType == ResponseType.STRING) {
-
+            }
         }
         return result;
     }
@@ -113,10 +119,12 @@ public class MetricProvider {
         object desired_value = null;
         // Call API endpoint or execute program/script
         if (mApiEndpoint != null) {
-            Dictionary<string, object> json = await GetCallAPI(mApiEndpoint);
-            Dictionary<string, object> flatten_json = new Dictionary<string, object>();
-            FlattenDict("", json, flatten_json);
-            desired_value = flatten_json[mResponsebodyIdentifier];
+            string response = await CallAPI(mApiEndpoint);
+            object result = PreprocessResult(response, mResponseType);
+            if (result is Dictionary<string, object>) {
+                Dictionary<string, object> json_result = (Dictionary<string, object>)result;
+                desired_value = json_result[mResponsebodyIdentifier];
+            }
         } else if (mProgram != null && mArgument != null) {
             desired_value = Convert.ToDouble(RunCmd(mProgram, mArgument));
         }
@@ -131,11 +139,11 @@ public class MetricProvider {
         return desired_value;
     }
 
-    private async Task<Dictionary<string, object>> GetCallAPI(string url) {
+    private async Task<string> CallAPI(string url) {
         var response = await mClient.GetAsync(url);
         if (response != null) {
             var jsonString = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
+            return jsonString;
         }
         return null;
     }
