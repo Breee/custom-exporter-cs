@@ -65,6 +65,22 @@ public class MetricProvider {
         }
     }
 
+    private void FlattenDict(string current_root, Dictionary<string, object> input, Dictionary<string, object> output) {
+        foreach (KeyValuePair<string, object> entry in input) {
+            string new_root = "";
+            if (current_root == "") {
+                new_root = entry.Key;
+            } else {
+                new_root = current_root + "." + entry.Key;
+            }
+            if (entry.Value is Dictionary<string, object>) {
+                FlattenDict(new_root, (Dictionary<string, object>)entry.Value, output);
+            } else {
+                output.Add(new_root, entry.Value);
+            }
+        }
+    }
+
     public string GetMetricName() {
         return mMetricName;
     }
@@ -77,23 +93,21 @@ public class MetricProvider {
         // Call API endpoint or execute program/script
         if (mApiEndpoint != null) {
             Dictionary<string, object> json = await GetCallAPI(mApiEndpoint);
-            // TODO: flatten dictionary
-            desired_value = json[mResponsebodyIdentifier];
+            Dictionary<string, object> flatten_json = new Dictionary<string, object>();
+            FlattenDict("", json, flatten_json);
+            desired_value = flatten_json[mResponsebodyIdentifier];
         } else if (mProgram != null && mArgument != null) {
             desired_value = Convert.ToDouble(RunCmd(mProgram, mArgument));
         }
 
         // int double and float are untouched,  strings are converted according to the given value_mapping if present.
-        if (desired_value is int || desired_value is double || desired_value is float) {
-            return desired_value;
-        } else if (desired_value is string) {
+        if (desired_value is string) {
             if (mValueMapping != null && mValueMapping.ContainsKey((string)desired_value)) {
-                return mValueMapping[(string)desired_value];
+                desired_value = mValueMapping[(string)desired_value];
             }
-            return (string)desired_value;
-        } else {
-            return null;
         }
+
+        return desired_value;
     }
 
     private async Task<Dictionary<string, object>> GetCallAPI(string url) {
