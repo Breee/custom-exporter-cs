@@ -20,6 +20,7 @@ A metric definition is a json file of the form:
         "metric_name": "database_health",
         "execution_type": "api_call",
         "api_endpoint": "/api/health",
+        "response_type": "json",
         "desired_response_field": "database",
         "string_value_mapping": {
           "ok": 1.0,
@@ -92,6 +93,7 @@ A `metric` can be an API call:
             "metric_name": "database_health",
             "execution_type": "api_call",
             "api_endpoint": "/api/health",
+            "response_type": "json",
             "desired_response_field": "database",
             "string_value_mapping": {
               "ok": 1.0,
@@ -107,6 +109,7 @@ A `metric` can be an API call:
 - `execution_type` specifies how the metric is scraped, you can use either `api_call` or `script`
 - `api_endpoint` is the API endpoint on which we perfom a GET request,
       the whole adress consists of `url` and `api_endpoint` combined, e.g: `http://grafana/api/health`
+- `response_type` can be `json`, `number` or `string` and defines how the response_body of the API-call is processed.
 - `desired_response_field` is the field in the response body we want to extract, for example, the response could be:
     ```json
     {
@@ -116,6 +119,7 @@ A `metric` can be an API call:
     }
     ```
     in our example we want the `database` field.
+    Note that is field is only relevant if the `response_type` is `json`.
 - `string_value_mapping` is a mapping of strings to doubles, 
       this is useful if a `desired_response_field` contains a string like the example above, `"ok"`.
 

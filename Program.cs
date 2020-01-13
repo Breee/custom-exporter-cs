@@ -34,6 +34,7 @@ namespace custom_exporter {
                 string service_name = def.ServiceName;
                 string url = def.Url;
                 foreach (Metric metric in def.Metrics) {
+
                     string api_endpoint = metric.ApiEndpoint != null ? url + metric.ApiEndpoint : null;
                     string metric_name = def.ServiceName + "_" + metric.MetricName;
                     string reponse_body_identifier = metric.DesiredResponseField;
@@ -42,6 +43,7 @@ namespace custom_exporter {
                     SortedDictionary<string, string> labels = metric.Labels;
                     ResponseType responseType = metric.ResponseType;
                     ExecutionType executionType = metric.ExecutionType;
+
                     // Create MetricEndpoint which executes API calls or executes a program/script
                     MetricProvider metricEndpoint = null;
                     if (executionType == ExecutionType.SCRIPT && metric.Program != null && metric.Argument != null) {
@@ -49,6 +51,7 @@ namespace custom_exporter {
                     } else if (executionType == ExecutionType.API_CALL && api_endpoint != null) {
                         metricEndpoint = new MetricProvider(api_endpoint, metric_name, reponse_body_identifier, auth_credentials, string_value_mapping, labels, responseType, executionType);
                     }
+
                     // Create Prometheus Gauges
                     GaugeConfiguration config = new GaugeConfiguration();
                     if (labels != null) {
