@@ -51,6 +51,10 @@ namespace MetricDefinitions {
         [JsonProperty("desired_response_field", NullValueHandling = NullValueHandling.Ignore)]
         public string DesiredResponseField { get; set; }
 
+        [JsonProperty("response_type", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(ResponseTypeConverter))]
+        public ResponseType ResponseType { get; set; }
+
         [JsonProperty("string_value_mapping", NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, double> StringValueMapping { get; set; }
 
@@ -61,7 +65,8 @@ namespace MetricDefinitions {
         public string Argument { get; set; }
 
         [JsonProperty("execution_type", NullValueHandling = NullValueHandling.Ignore)]
-        public string ExecutionType { get; set; }
+        [JsonConverter(typeof(ExecutionTypeConverter))]
+        public ExecutionType ExecutionType { get; set; }
 
         [JsonProperty("labels", NullValueHandling = NullValueHandling.Ignore)]
         public SortedDictionary<string, string> Labels { get; set; }
@@ -73,6 +78,85 @@ namespace MetricDefinitions {
 
     public static class Serialize {
         public static string ToJson(this MetricDefinition[] self) => JsonConvert.SerializeObject(self, MetricDefinitions.Converter.Settings);
+    }
+
+    public sealed class ResponseTypeConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            return objectType == typeof(string);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType,
+                object existingValue, JsonSerializer serializer) {
+            var value = (string)reader.Value;
+
+            switch (value) {
+                case "json":
+                    return ResponseType.JSON;
+                case "string":
+                    return ResponseType.STRING;
+                case "number":
+                    return ResponseType.NUMBER;
+                default:
+                    return ResponseType.UNKNOWN;
+            }
+        }
+
+        public override void WriteJson(JsonWriter writer, object value,
+                JsonSerializer serializer) {
+            var val = (ResponseType)value;
+
+            switch (val) {
+                case ResponseType.JSON:
+                    writer.WriteValue("json");
+                    break;
+                case ResponseType.NUMBER:
+                    writer.WriteValue("number");
+                    break;
+                case ResponseType.STRING:
+                    writer.WriteValue("string");
+                    break;
+                case ResponseType.UNKNOWN:
+                    writer.WriteValue("unknown");
+                    break;
+            }
+        }
+    }
+
+    public sealed class ExecutionTypeConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            return objectType == typeof(string);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType,
+                object existingValue, JsonSerializer serializer) {
+            var value = (string)reader.Value;
+
+            switch (value) {
+                case "api_call":
+                    return ExecutionType.API_CALL;
+                case "script":
+                    return ExecutionType.SCRIPT;
+                default:
+                    return ExecutionType.UNKNOWN;
+            }
+        }
+
+        public override void WriteJson(JsonWriter writer, object value,
+                JsonSerializer serializer) {
+            var val = (ExecutionType)value;
+
+            switch (val) {
+                case ExecutionType.API_CALL:
+                    writer.WriteValue("api_call");
+                    break;
+                case ExecutionType.SCRIPT:
+                    writer.WriteValue("script");
+                    break;
+                case ExecutionType.UNKNOWN:
+                    writer.WriteValue("unknown");
+                    break;
+            }
+        }
     }
 
     internal static class Converter {

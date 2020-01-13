@@ -40,12 +40,14 @@ namespace custom_exporter {
                     AuthCredentials auth_credentials = def.AuthCredentials;
                     Dictionary<string, double> string_value_mapping = metric.StringValueMapping;
                     SortedDictionary<string, string> labels = metric.Labels;
+                    ResponseType responseType = metric.ResponseType;
+                    ExecutionType executionType = metric.ExecutionType;
                     // Create MetricEndpoint which executes API calls or executes a program/script
                     MetricProvider metricEndpoint = null;
-                    if (metric.ExecutionType == "script" && metric.Program != null && metric.Argument != null) {
-                        metricEndpoint = new MetricProvider(metric_name, metric.Program, metric.Argument, labels);
-                    } else if (metric.ExecutionType == "api_call" && api_endpoint != null) {
-                        metricEndpoint = new MetricProvider(api_endpoint, metric_name, reponse_body_identifier, auth_credentials, string_value_mapping, labels);
+                    if (executionType == ExecutionType.SCRIPT && metric.Program != null && metric.Argument != null) {
+                        metricEndpoint = new MetricProvider(metric_name, metric.Program, metric.Argument, labels, executionType);
+                    } else if (executionType == ExecutionType.API_CALL && api_endpoint != null) {
+                        metricEndpoint = new MetricProvider(api_endpoint, metric_name, reponse_body_identifier, auth_credentials, string_value_mapping, labels, responseType, executionType);
                     }
                     // Create Prometheus Gauges
                     GaugeConfiguration config = new GaugeConfiguration();

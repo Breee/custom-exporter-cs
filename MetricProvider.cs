@@ -10,11 +10,14 @@ using Newtonsoft.Json; // Nuget Package
 using System.Text;
 using MetricDefinitions;
 
+public enum ExecutionType { API_CALL, SCRIPT, UNKNOWN };
+public enum ResponseType { JSON, STRING, NUMBER, UNKNOWN };
 public class MetricProvider {
-    enum MetricProviderType { APICaller, Executor };
     private string mApiEndpoint;
     private string mMetricName;
     private string mResponsebodyIdentifier;
+    private ResponseType mResponseType;
+    private ExecutionType mExecutionType;
     private AuthCredentials mAuthCredentials;
     private Dictionary<string, double> mValueMapping;
     private string mProgram;
@@ -22,10 +25,12 @@ public class MetricProvider {
     private HttpClient mClient;
     private SortedDictionary<string, string> mLabels;
 
-    public MetricProvider(string api_endpoint, string metric_name, string reponse_body_identifier, AuthCredentials auth_credentials, Dictionary<string, double> value_mapping, SortedDictionary<string, string> labels) {
+    public MetricProvider(string api_endpoint, string metric_name, string reponse_body_identifier, AuthCredentials auth_credentials, Dictionary<string, double> value_mapping, SortedDictionary<string, string> labels, ResponseType responseType, ExecutionType executionType) {
         mApiEndpoint = api_endpoint;
         mMetricName = metric_name;
         mResponsebodyIdentifier = reponse_body_identifier;
+        mResponseType = responseType;
+        mExecutionType = executionType;
         mAuthCredentials = auth_credentials;
         mValueMapping = value_mapping;
         mLabels = labels;
@@ -41,11 +46,12 @@ public class MetricProvider {
             }
         }
     }
-    public MetricProvider(string metric_name, string program, string argument, SortedDictionary<string, string> labels) {
+    public MetricProvider(string metric_name, string program, string argument, SortedDictionary<string, string> labels, ExecutionType executionType) {
         mMetricName = metric_name;
         mProgram = program;
         mArgument = argument;
         mLabels = labels;
+        mExecutionType = executionType;
     }
 
     private string RunCmd(string program, string argument) {
@@ -81,6 +87,21 @@ public class MetricProvider {
         }
     }
 
+    private object HandleApiResponse(string response) {
+        object result = null;
+        if (mResponseType == ResponseType.JSON) {
+
+        } else if (mResponseType == ResponseType.NUMBER) {
+
+        } else if (mResponseType == ResponseType.STRING) {
+
+        }
+        return result;
+    }
+
+    private object ProcessScriptOutput(string output) {
+        return output;
+    }
     public string GetMetricName() {
         return mMetricName;
     }
